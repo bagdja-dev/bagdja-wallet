@@ -13,12 +13,15 @@ import 'package:url_launcher/url_launcher.dart';
 class AuthRepository {
   static const String clientId = 'wallet-app';
   static const String redirectUrl = 'com.bagdja.wallet:/oauthredirect';
+  static const String logoutCallbackUrl = 'com.bagdja.wallet:/logout-callback';
   static const String authorizationEndpoint =
       'https://login.bagdja.com/oauth/authorize';
   static const String tokenEndpoint = 'https://auth.bagdja.com/oauth/token';
+  static const String logoutEndpoint = 'https://login.bagdja.com/logout';
 
   static const _verifierKey = 'oauth_code_verifier';
   static const _stateKey = 'oauth_state';
+  static const _forceReauthKey = 'force_reauth';
 
   final ApiClient apiClient;
   final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
@@ -26,17 +29,18 @@ class AuthRepository {
 
   StreamSubscription<Uri>? _linkSubscription;
   Completer<UserModel>? _loginCompleter;
+  Completer<void>? _logoutCompleter;
   bool _isProcessingCallback = false;
 
   AuthRepository({required this.apiClient});
 
   Future<void> initDeepLinks() async {
     await _linkSubscription?.cancel();
-    _linkSubscription = _appLinks.uriLinkStream.listen(_handleOAuthCallback);
+    _linkSubscription = _appLinks.uriLinkStream.listen(_handleIncomingLink);
 
     final initialUri = await _appLinks.getInitialLink();
     if (initialUri != null) {
-      await _handleOAuthCallback(initialUri);
+      await _handleIncomingLink(initialUri);
     }
   }
 
@@ -59,16 +63,18 @@ class AuthRepository {
     await secureStorage.write(key: _verifierKey, value: codeVerifier);
     await secureStorage.write(key: _stateKey, value: state);
 
+    final queryParams = {
+      'client_id': clientId,
+      'response_type': 'code',
+      'redirect_uri': redirectUrl,
+      'state': state,
+      'code_challenge': codeChallenge,
+      'code_challenge_method': 'S256',
+      'scope': 'openid profile email',
+    };
+
     final authUri = Uri.parse(authorizationEndpoint).replace(
-      queryParameters: {
-        'client_id': clientId,
-        'response_type': 'code',
-        'redirect_uri': redirectUrl,
-        'state': state,
-        'code_challenge': codeChallenge,
-        'code_challenge_method': 'S256',
-        'scope': 'openid profile email',
-      },
+      queryParameters: queryParams,
     );
 
     final launched = await launchUrl(
@@ -99,8 +105,58 @@ class AuthRepository {
     }
   }
 
+  Future<void> logout() async {
+    if (_loginCompleter != null && !_loginCompleter!.isCompleted) {
+      _loginCompleter!.completeError(StateError('Logout'));
+    }
+    _loginCompleter = null;
+    _isProcessingCallback = false;
+
+    await secureStorage.delete(key: 'access_token');
+    await secureStorage.delete(key: 'refresh_token');
+    await _clearOAuthSession();
+    await secureStorage.write(key: _forceReauthKey, value: 'true');
+
+    _logoutCompleter = Completer<void>();
+
+    final logoutUri = Uri.parse(logoutEndpoint).replace(
+      queryParameters: {
+        'redirect_uri': logoutCallbackUrl,
+      },
+    );
+
+    final launched = await launchUrl(
+      logoutUri,
+      mode: LaunchMode.externalApplication,
+    );
+
+    if (!launched) {
+      _logoutCompleter = null;
+      return;
+    }
+
+    try {
+      await _logoutCompleter!.future.timeout(const Duration(seconds: 15));
+    } on TimeoutException {
+      // Endpoint belum deploy atau user menutup browser — logout lokal tetap aktif.
+    } finally {
+      _logoutCompleter = null;
+    }
+  }
+
+  Future<void> _handleIncomingLink(Uri uri) async {
+    if (_isLogoutCallback(uri)) {
+      _logoutCompleter?.complete();
+      return;
+    }
+
+    if (_isOAuthCallback(uri)) {
+      await _handleOAuthCallback(uri);
+    }
+  }
+
   Future<void> _handleOAuthCallback(Uri uri) async {
-    if (!_isOAuthCallback(uri) || _isProcessingCallback) {
+    if (_isProcessingCallback) {
       return;
     }
 
@@ -188,18 +244,14 @@ class AuthRepository {
       await secureStorage.write(key: 'refresh_token', value: refreshToken);
     }
 
+    await secureStorage.delete(key: _forceReauthKey);
+
     return UserModel(
       userId: 'SSO_USER',
       username: 'bagdja_user',
       name: 'Bagdja User',
       token: accessToken,
     );
-  }
-
-  Future<void> logout() async {
-    await secureStorage.delete(key: 'access_token');
-    await secureStorage.delete(key: 'refresh_token');
-    await _clearOAuthSession();
   }
 
   Future<bool> isLoggedIn() async {
@@ -219,6 +271,16 @@ class AuthRepository {
   bool _isOAuthCallback(Uri uri) {
     return uri.scheme == 'com.bagdja.wallet' &&
         uri.queryParameters.containsKey('code');
+  }
+
+  bool _isLogoutCallback(Uri uri) {
+    if (uri.scheme != 'com.bagdja.wallet') {
+      return false;
+    }
+
+    return uri.path == '/logout-callback' ||
+        uri.host == 'logout-callback' ||
+        uri.path.startsWith('/logout-callback');
   }
 
   String _generateCodeVerifier() {

@@ -1,21 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bagdja_wallet/core/router.dart';
+import 'package:bagdja_wallet/core/theme/app_colors.dart';
 import 'package:bagdja_wallet/features/auth/bloc/auth_bloc.dart';
 import 'package:bagdja_wallet/injection.dart' as di;
-
-import 'package:bagdja_wallet/core/theme/app_colors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await di.init();
-  runApp(MyApp(authBloc: di.sl<AuthBloc>()));
+
+  final authBloc = di.sl<AuthBloc>();
+  final router = AppRouter.create(authBloc);
+
+  runApp(MyApp(authBloc: authBloc, router: router));
 }
 
 class MyApp extends StatefulWidget {
   final AuthBloc authBloc;
+  final GoRouter router;
 
-  const MyApp({super.key, required this.authBloc});
+  const MyApp({
+    super.key,
+    required this.authBloc,
+    required this.router,
+  });
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -37,9 +46,15 @@ class _MyAppState extends State<MyApp> {
         BlocProvider.value(value: widget.authBloc),
       ],
       child: BlocListener<AuthBloc, AuthState>(
-        listenWhen: (previous, current) => current is AuthAuthenticated,
+        listenWhen: (previous, current) =>
+            current is AuthAuthenticated ||
+            (previous is AuthAuthenticated && current is AuthInitial),
         listener: (context, state) {
-          AppRouter.router.goNamed(RouteName.home);
+          if (state is AuthAuthenticated) {
+            widget.router.goNamed(RouteName.home);
+          } else if (state is AuthInitial) {
+            widget.router.goNamed(RouteName.login);
+          }
         },
         child: MaterialApp.router(
           title: 'Bagdja Wallet',
@@ -68,7 +83,7 @@ class _MyAppState extends State<MyApp> {
             ),
             useMaterial3: true,
           ),
-          routerConfig: AppRouter.router,
+          routerConfig: widget.router,
         ),
       ),
     );

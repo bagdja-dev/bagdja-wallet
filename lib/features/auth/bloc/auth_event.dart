@@ -15,4 +15,6 @@ final class CheckAuthStatus extends AuthEvent {
   const CheckAuthStatus();
 }
 
-class LogoutRequested extends AuthEvent {}
+class LogoutRequested extends AuthEvent {
+  const LogoutRequested();
+}
