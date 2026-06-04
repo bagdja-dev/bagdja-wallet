@@ -5,9 +5,11 @@ import 'package:bagdja_wallet/core/router.dart';
 import 'package:bagdja_wallet/core/theme/app_colors.dart';
 import 'package:bagdja_wallet/features/auth/bloc/auth_bloc.dart';
 import 'package:bagdja_wallet/injection.dart' as di;
+import 'package:bagdja_wallet/core/config/settings.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Settings.init();
   await di.init();
 
   final authBloc = di.sl<AuthBloc>();
