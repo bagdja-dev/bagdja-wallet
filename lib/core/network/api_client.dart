@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:bagdja_wallet/core/config/settings.dart';
@@ -5,6 +6,9 @@ import 'package:bagdja_wallet/core/config/settings.dart';
 class ApiClient {
   final Dio dio;
   final FlutterSecureStorage secureStorage;
+  final StreamController<void> _unauthorizedController = StreamController<void>.broadcast();
+
+  Stream<void> get onUnauthorized => _unauthorizedController.stream;
 
   ApiClient({this.secureStorage = const FlutterSecureStorage()}) : dio = Dio(BaseOptions(
     baseUrl: Settings.baseUrl,
@@ -22,10 +26,17 @@ class ApiClient {
         return handler.next(options);
       },
       onError: (DioException e, handler) {
-        // Bisa dihandle secara global, misalnya jika token expired (401)
+        // Handle 401 Unauthorized globally
+        if (e.response?.statusCode == 401) {
+          _unauthorizedController.add(null);
+        }
         return handler.next(e);
       },
     ));
+  }
+
+  void dispose() {
+    _unauthorizedController.close();
   }
 }
 

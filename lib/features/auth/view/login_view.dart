@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bagdja_wallet/features/auth/bloc/auth_bloc.dart';
+import 'package:bagdja_wallet/localization/main.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -65,9 +66,9 @@ class _LoginViewState extends State<LoginView> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                       icon: const Icon(Icons.security),
-                      label: const Text(
-                        'Login with Bagdja Identity',
-                        style: TextStyle(fontSize: 18),
+                      label: Text(
+                        context.tr('login.loginWithSSO'),
+                        style: const TextStyle(fontSize: 18),
                       ),
                     );
                   },
