@@ -39,4 +39,12 @@ const Map<String, Map<String, String>> enStrings = {
     'success': 'Success',
     'noData': 'No Data',
   },
+  'profile': {
+    'title': 'Profile',
+    'logout': 'Logout',
+    'logoutConfirmDescription': 'Are you sure you want to logout?',
+    'logoutConfirm': 'Logout Confirmation',
+    'logoutConfirmConfirm': 'Logout',
+    'logoutConfirmCancel': 'Cancel',
+  },
 };

@@ -1,7 +1,7 @@
 import 'package:bagdja_wallet/features/home/view/widgets/transaction_tile.dart';
 import 'package:bagdja_wallet/features/wallet/bloc/wallet_bloc.dart';
 import 'package:bagdja_wallet/features/wallet/bloc/wallet_event.dart';
-import 'package:bagdja_wallet/features/wallet/models/transaction_model.dart';
+import 'package:bagdja_wallet/shared/models/transaction_model.dart';
 import 'package:bagdja_wallet/localization/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -65,10 +65,16 @@ class RecentMutation extends StatelessWidget {
             ),
           )
         else
-          ...transactions.map((tx) => TransactionTile(
-                transaction: tx,
-                formatter: formatter,
-              )),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: transactions.map((tx) => TransactionTile(
+                  transaction: tx,
+                  formatter: formatter,
+                )).toList(),
+              ),
+            ),
+          ),
         
         if (isLoading)
           const Padding(

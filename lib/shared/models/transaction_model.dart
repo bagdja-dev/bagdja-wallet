@@ -55,18 +55,22 @@ class TransactionModel extends Equatable {
     return referenceId ?? '—';
   }
 
+  static T? _get<T>(Map<String, dynamic> json, String camelCase, String snakeCase) {
+    return json[camelCase] as T? ?? json[snakeCase] as T?;
+  }
+
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     return TransactionModel(
       id: json['id'] as String,
-      walletId: json['wallet_id'] as String,
+      walletId: _get<String>(json, 'walletId', 'wallet_id')!,
       amount: (json['amount'] as num).toDouble(),
       type: json['type'] as String,
-      referenceId: json['reference_id'] as String?,
-      externalId: json['external_id'] as String?,
+      referenceId: _get<String>(json, 'referenceId', 'reference_id'),
+      externalId: _get<String>(json, 'externalId', 'external_id'),
       description: json['description'] as String?,
       currency: json['currency'] as String?,
-      createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'] as String)
+      createdAt: _get<String>(json, 'createdAt', 'created_at') != null
+          ? DateTime.tryParse(_get<String>(json, 'createdAt', 'created_at')!)
           : null,
     );
   }

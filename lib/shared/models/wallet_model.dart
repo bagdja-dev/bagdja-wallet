@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 class WalletModel extends Equatable {
   final String id;
   final String? orgId;
-  final String userId;
+  final String? userId;
   final String currencyCode;
   final String provider;
   final double balance;
@@ -25,33 +25,39 @@ class WalletModel extends Equatable {
     required this.updatedAt,
   });
 
+  static T? _get<T>(Map<String, dynamic> json, String camelCase, String snakeCase) {
+    return json[camelCase] as T? ?? json[snakeCase] as T?;
+  }
+
   factory WalletModel.fromJson(Map<String, dynamic> json) {
     return WalletModel(
       id: json['id'] as String,
-      orgId: json['org_id'] as String?,
-      userId: json['user_id'] as String,
-      currencyCode: json['currency_code'] as String,
+      orgId: _get<String>(json, 'orgId', 'org_id') ,
+      userId: _get<String>(json, 'userId', 'user_id'),
+      currencyCode: _get<String>(json, 'currencyCode', 'currency_code')!,
       provider: json['provider'] as String,
       balance: (json['balance'] as num).toDouble(),
-      heldBalance: (json['held_balance'] as num).toDouble(),
-      isActive: json['is_active'] as bool,
-      activatedAt: json['activated_at'] != null ? DateTime.parse(json['activated_at'] as String) : null,
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      heldBalance: (_get<num>(json, 'heldBalance', 'held_balance') ?? 0).toDouble(),
+      isActive: _get<bool>(json, 'isActive', 'is_active') ?? false,
+      activatedAt: _get<String>(json, 'activatedAt', 'activated_at') != null
+          ? DateTime.parse(_get<String>(json, 'activatedAt', 'activated_at')!)
+          : null,
+      updatedAt: DateTime.parse(_get<String>(json, 'updatedAt', 'updated_at')!),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'org_id': orgId,
-      'user_id': userId,
-      'currency_code': currencyCode,
+      'orgId': orgId,
+      'userId': userId,
+      'currencyCode': currencyCode,
       'provider': provider,
       'balance': balance,
-      'held_balance': heldBalance,
-      'is_active': isActive,
-      'activated_at': activatedAt?.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'heldBalance': heldBalance,
+      'isActive': isActive,
+      'activatedAt': activatedAt?.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
     };
   }
 

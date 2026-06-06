@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
-import 'package:bagdja_wallet/features/wallet/models/wallet_model.dart';
-import 'package:bagdja_wallet/features/wallet/models/transaction_model.dart';
+import 'package:bagdja_wallet/shared/models/wallet_model.dart';
+import 'package:bagdja_wallet/shared/models/transaction_model.dart';
+import 'package:bagdja_wallet/shared/models/organization_model.dart';
+import 'package:bagdja_wallet/shared/models/user_profile_model.dart';
 
 abstract class WalletState extends Equatable {
   const WalletState();
@@ -25,6 +27,10 @@ class WalletLoaded extends WalletState {
   final bool hasMoreTransactions;
   final bool isLoadingTransactions;
   final String? transactionError;
+  final List<OrganizationModel> organizations;
+  final List<WalletOwner> walletOwners;
+  final WalletOwner? selectedWalletOwner;
+  final UserProfileModel? userProfile;
 
   const WalletLoaded(
     this.wallets, {
@@ -34,6 +40,10 @@ class WalletLoaded extends WalletState {
     this.hasMoreTransactions = true,
     this.isLoadingTransactions = false,
     this.transactionError,
+    this.organizations = const [],
+    this.walletOwners = const [],
+    this.selectedWalletOwner,
+    this.userProfile,
   });
 
   WalletLoaded copyWith({
@@ -44,6 +54,10 @@ class WalletLoaded extends WalletState {
     bool? hasMoreTransactions,
     bool? isLoadingTransactions,
     String? transactionError,
+    List<OrganizationModel>? organizations,
+    List<WalletOwner>? walletOwners,
+    WalletOwner? selectedWalletOwner,
+    UserProfileModel? userProfile,
   }) {
     return WalletLoaded(
       wallets ?? this.wallets,
@@ -53,6 +67,10 @@ class WalletLoaded extends WalletState {
       hasMoreTransactions: hasMoreTransactions ?? this.hasMoreTransactions,
       isLoadingTransactions: isLoadingTransactions ?? this.isLoadingTransactions,
       transactionError: transactionError ?? this.transactionError,
+      organizations: organizations ?? this.organizations,
+      walletOwners: walletOwners ?? this.walletOwners,
+      selectedWalletOwner: selectedWalletOwner ?? this.selectedWalletOwner,
+      userProfile: userProfile ?? this.userProfile,
     );
   }
 
@@ -65,6 +83,10 @@ class WalletLoaded extends WalletState {
         hasMoreTransactions,
         isLoadingTransactions,
         transactionError,
+        organizations,
+        walletOwners,
+        selectedWalletOwner,
+        userProfile,
       ];
 }
 

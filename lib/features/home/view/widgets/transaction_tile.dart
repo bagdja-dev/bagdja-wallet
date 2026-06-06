@@ -1,4 +1,4 @@
-import 'package:bagdja_wallet/features/wallet/models/transaction_model.dart';
+import 'package:bagdja_wallet/shared/models/transaction_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 

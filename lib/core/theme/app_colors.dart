@@ -18,4 +18,7 @@ class AppColors {
 
   //shadow
   static const Color shadow = Color.fromARGB(109, 114, 114, 117);
+
+  //dropdown
+  static const Color dropdown = Color(0xFF020617);
 }

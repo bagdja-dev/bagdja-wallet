@@ -39,4 +39,12 @@ const Map<String, Map<String, String>> idStrings = {
     'success': 'Berhasil',
     'noData': 'Tidak Ada Data',
   },
+  'profile': {
+    'title': 'Profil',
+    'logout': 'Keluar',
+    'logoutConfirmDescription': 'Apa anda yakin ingin keluar?',
+    'logoutConfirm': 'Konfirmasi Keluar',
+    'logoutConfirmConfirm': 'Keluar',
+    'logoutConfirmCancel': 'Batal',
+   },
 };

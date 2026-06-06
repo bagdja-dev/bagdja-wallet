@@ -1,99 +1,28 @@
 import 'package:bagdja_wallet/core/utils/widget_extensions.dart';
-import 'package:bagdja_wallet/features/escrow/view/escrow_history_view.dart';
-import 'package:bagdja_wallet/features/home/view/widgets/action_bottom_sheet.dart';
 import 'package:bagdja_wallet/features/home/view/widgets/recent_transactions_section.dart';
 import 'package:bagdja_wallet/features/home/view/widgets/wallets_section.dart';
-import 'package:bagdja_wallet/features/invoice/view/invoice_history_view.dart';
 import 'package:bagdja_wallet/features/wallet/bloc/wallet_bloc.dart';
 import 'package:bagdja_wallet/features/wallet/bloc/wallet_event.dart';
 import 'package:bagdja_wallet/features/wallet/bloc/wallet_state.dart';
-import 'package:bagdja_wallet/features/wallet/models/wallet_model.dart';
-import 'package:bagdja_wallet/features/wallet/models/transaction_model.dart';
+import 'package:bagdja_wallet/shared/models/wallet_model.dart';
+import 'package:bagdja_wallet/shared/models/transaction_model.dart';
+import 'package:bagdja_wallet/shared/models/organization_model.dart';
+import 'package:bagdja_wallet/shared/models/user_profile_model.dart';
+import 'package:bagdja_wallet/shared/widgets/scaffold_with_bottom_nav.dart';
 import 'package:bagdja_wallet/localization/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-class HomeView extends StatefulWidget {
+class HomeView extends StatelessWidget {
   const HomeView({super.key});
 
   @override
-  State<HomeView> createState() => _HomeViewState();
-}
-
-class _HomeViewState extends State<HomeView> {
-  int _selectedIndex = 1;
-
-  final List<Widget> _pages = [
-    const InvoiceHistoryView(),
-    const _HomeTab(),
-    const EscrowHistoryView(),
-  ];
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
-      bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 6.0,
-        height: 60,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.receipt, size: 24),
-              onPressed: () => setState(() => _selectedIndex = 0),
-              color: _selectedIndex == 0 ? Colors.blue : Colors.grey,
-              padding: EdgeInsets.zero,
-            ),
-            const SizedBox(width: 48),
-            IconButton(
-              icon: const Icon(Icons.account_balance_wallet, size: 24),
-              onPressed: () => setState(() => _selectedIndex = 2),
-              color: _selectedIndex == 2 ? Colors.blue : Colors.grey,
-              padding: EdgeInsets.zero,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: SizedBox(
-        width: 56,
-        height: 56,
-        child: FloatingActionButton(
-          onPressed: () => _showActionBottomSheet(context),
-          shape: const CircleBorder(),
-          backgroundColor: Colors.blue,
-          elevation: 4,
-          child: const Icon(Icons.add, color: Colors.white, size: 28),
-        ),
-      ),
-      floatingActionButtonLocation: const _CustomFloatingActionButtonLocation(),
+    return ScaffoldWithBottomNav(
+      appBarTitle: context.tr('home.wallet'),
+      body: const _HomeTab(),
     );
-  }
-
-  void _showActionBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const ActionBottomSheet(),
-    );
-  }
-}
-
-class _CustomFloatingActionButtonLocation extends FloatingActionButtonLocation {
-  const _CustomFloatingActionButtonLocation();
-
-  @override
-  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
-    final double fabX = (scaffoldGeometry.scaffoldSize.width - scaffoldGeometry.floatingActionButtonSize.width) / 2;
-    final double fabY = scaffoldGeometry.scaffoldSize.height - scaffoldGeometry.floatingActionButtonSize.height - 20;
-    return Offset(fabX, fabY);
   }
 }
 
@@ -122,6 +51,9 @@ class _HomeTab extends StatelessWidget {
               hasMoreTransactions: state.hasMoreTransactions,
               transactionError: state.transactionError,
               formatter: formatter,
+              walletOwners: state.walletOwners,
+              selectedWalletOwner: state.selectedWalletOwner,
+              userProfile: state.userProfile,
             ),
             _ => const SizedBox.shrink(),
           };
@@ -180,6 +112,9 @@ class _LoadedState extends StatefulWidget {
   final bool hasMoreTransactions;
   final String? transactionError;
   final NumberFormat formatter;
+  final List<WalletOwner> walletOwners;
+  final WalletOwner? selectedWalletOwner;
+  final UserProfileModel? userProfile;
 
   const _LoadedState({
     required this.wallets,
@@ -189,6 +124,9 @@ class _LoadedState extends StatefulWidget {
     required this.hasMoreTransactions,
     required this.transactionError,
     required this.formatter,
+    required this.walletOwners,
+    required this.selectedWalletOwner,
+    this.userProfile,
   });
 
   @override
@@ -201,8 +139,7 @@ class _LoadedStateState extends State<_LoadedState> {
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController()
-      ..addListener(_onScroll);
+    _scrollController = ScrollController()..addListener(_onScroll);
   }
 
   @override
@@ -224,23 +161,33 @@ class _LoadedStateState extends State<_LoadedState> {
       onRefresh: () async {
         context.read<WalletBloc>().add(const FetchWalletBalance());
       },
-      child: ListView(
-        controller: _scrollController,
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          WalletsSection(
-            wallets: widget.wallets,
-            selectedWallet: widget.selectedWallet,
-            formatter: widget.formatter,
-          ),
-          RecentMutation(
-            transactions: widget.transactions,
-            isLoading: widget.isLoadingTransactions,
-            hasMore: widget.hasMoreTransactions,
-            error: widget.transactionError,
-            formatter: widget.formatter,
-          ),
-        ].withGap(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
+        child: Column(
+          children: [
+            WalletsSection(
+              wallets: widget.wallets,
+              selectedWallet: widget.selectedWallet,
+              formatter: widget.formatter,
+              walletOwners: widget.walletOwners,
+              selectedWalletOwner: widget.selectedWalletOwner,
+              userProfile: widget.userProfile,
+            ),
+            Expanded(
+              child: SizedBox(
+                height: double.infinity,
+                width: double.infinity,
+                child: RecentMutation(
+                  transactions: widget.transactions,
+                  isLoading: widget.isLoadingTransactions,
+                  hasMore: widget.hasMoreTransactions,
+                  error: widget.transactionError,
+                  formatter: widget.formatter,
+                ),
+              ),
+            ),
+          ].withGap(10),
+        ),
       ),
     );
   }
