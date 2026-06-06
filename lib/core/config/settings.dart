@@ -13,7 +13,7 @@ class Settings {
     isDev = version.toLowerCase().contains('dev');
     
     if (isDev) {
-      baseUrl = 'http://192.168.1.11:5002';
+      baseUrl = 'http://192.168.1.5:5002';
     } else {
       baseUrl = 'https://wallet-api.bagdja.com';
     }

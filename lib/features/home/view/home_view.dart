@@ -1,6 +1,9 @@
 import 'package:bagdja_wallet/core/utils/widget_extensions.dart';
+import 'package:bagdja_wallet/features/escrow/view/escrow_history_view.dart';
+import 'package:bagdja_wallet/features/home/view/widgets/action_bottom_sheet.dart';
 import 'package:bagdja_wallet/features/home/view/widgets/recent_transactions_section.dart';
 import 'package:bagdja_wallet/features/home/view/widgets/wallets_section.dart';
+import 'package:bagdja_wallet/features/invoice/view/invoice_history_view.dart';
 import 'package:bagdja_wallet/features/wallet/bloc/wallet_bloc.dart';
 import 'package:bagdja_wallet/features/wallet/bloc/wallet_event.dart';
 import 'package:bagdja_wallet/features/wallet/bloc/wallet_state.dart';
@@ -11,8 +14,91 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-class HomeView extends StatelessWidget {
+class HomeView extends StatefulWidget {
   const HomeView({super.key});
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  int _selectedIndex = 1;
+
+  final List<Widget> _pages = [
+    const InvoiceHistoryView(),
+    const _HomeTab(),
+    const EscrowHistoryView(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 6.0,
+        height: 60,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.receipt, size: 24),
+              onPressed: () => setState(() => _selectedIndex = 0),
+              color: _selectedIndex == 0 ? Colors.blue : Colors.grey,
+              padding: EdgeInsets.zero,
+            ),
+            const SizedBox(width: 48),
+            IconButton(
+              icon: const Icon(Icons.account_balance_wallet, size: 24),
+              onPressed: () => setState(() => _selectedIndex = 2),
+              color: _selectedIndex == 2 ? Colors.blue : Colors.grey,
+              padding: EdgeInsets.zero,
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: SizedBox(
+        width: 56,
+        height: 56,
+        child: FloatingActionButton(
+          onPressed: () => _showActionBottomSheet(context),
+          shape: const CircleBorder(),
+          backgroundColor: Colors.blue,
+          elevation: 4,
+          child: const Icon(Icons.add, color: Colors.white, size: 28),
+        ),
+      ),
+      floatingActionButtonLocation: const _CustomFloatingActionButtonLocation(),
+    );
+  }
+
+  void _showActionBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const ActionBottomSheet(),
+    );
+  }
+}
+
+class _CustomFloatingActionButtonLocation extends FloatingActionButtonLocation {
+  const _CustomFloatingActionButtonLocation();
+
+  @override
+  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
+    final double fabX = (scaffoldGeometry.scaffoldSize.width - scaffoldGeometry.floatingActionButtonSize.width) / 2;
+    final double fabY = scaffoldGeometry.scaffoldSize.height - scaffoldGeometry.floatingActionButtonSize.height - 20;
+    return Offset(fabX, fabY);
+  }
+}
+
+class _HomeTab extends StatelessWidget {
+  const _HomeTab();
 
   @override
   Widget build(BuildContext context) {
@@ -22,26 +108,24 @@ class HomeView extends StatelessWidget {
       decimalDigits: 0,
     );
 
-    return Scaffold(
-      body: SafeArea(
-        child: BlocBuilder<WalletBloc, WalletState>(
-          builder: (context, state) {
-            return switch (state) {
-              WalletLoading() => const _LoadingState(),
-              WalletError() => _ErrorState(message: state.message),
-              WalletLoaded() => _LoadedState(
-                wallets: state.wallets,
-                selectedWallet: state.selectedWallet,
-                transactions: state.transactions,
-                isLoadingTransactions: state.isLoadingTransactions,
-                hasMoreTransactions: state.hasMoreTransactions,
-                transactionError: state.transactionError,
-                formatter: formatter,
-              ),
-              _ => const SizedBox.shrink(),
-            };
-          },
-        ),
+    return SafeArea(
+      child: BlocBuilder<WalletBloc, WalletState>(
+        builder: (context, state) {
+          return switch (state) {
+            WalletLoading() => const _LoadingState(),
+            WalletError() => _ErrorState(message: state.message),
+            WalletLoaded() => _LoadedState(
+              wallets: state.wallets,
+              selectedWallet: state.selectedWallet,
+              transactions: state.transactions,
+              isLoadingTransactions: state.isLoadingTransactions,
+              hasMoreTransactions: state.hasMoreTransactions,
+              transactionError: state.transactionError,
+              formatter: formatter,
+            ),
+            _ => const SizedBox.shrink(),
+          };
+        },
       ),
     );
   }
@@ -149,7 +233,7 @@ class _LoadedStateState extends State<_LoadedState> {
             selectedWallet: widget.selectedWallet,
             formatter: widget.formatter,
           ),
-          RecentTransactionsSection(
+          RecentMutation(
             transactions: widget.transactions,
             isLoading: widget.isLoadingTransactions,
             hasMore: widget.hasMoreTransactions,

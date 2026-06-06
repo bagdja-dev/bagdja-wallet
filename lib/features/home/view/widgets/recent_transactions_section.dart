@@ -7,14 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-class RecentTransactionsSection extends StatelessWidget {
+class RecentMutation extends StatelessWidget {
   final List<TransactionModel> transactions;
   final bool isLoading;
   final bool hasMore;
   final String? error;
   final NumberFormat formatter;
 
-  const RecentTransactionsSection({
+  const RecentMutation({
     super.key,
     required this.transactions,
     required this.isLoading,
@@ -29,7 +29,7 @@ class RecentTransactionsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          context.tr('home.recentTransactions'),
+          context.tr('home.recentMutation'),
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
