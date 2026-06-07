@@ -42,3 +42,25 @@ class SelectWalletOwner extends WalletEvent {
 class LoadMoreTransactions extends WalletEvent {
   const LoadMoreTransactions();
 }
+
+class ActivateWallet extends WalletEvent {
+  final String currencyCode;
+
+  const ActivateWallet(this.currencyCode);
+
+  @override
+  List<Object?> get props => [currencyCode];
+}
+
+class ShowTopUpModal extends WalletEvent {
+  final String currencyCode;
+
+  const ShowTopUpModal(this.currencyCode);
+
+  @override
+  List<Object?> get props => [currencyCode];
+}
+
+class HideTopUpModal extends WalletEvent {
+  const HideTopUpModal();
+}

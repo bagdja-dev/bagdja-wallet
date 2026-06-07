@@ -1,3 +1,4 @@
+import 'package:bagdja_wallet/core/theme/app_colors.dart';
 import 'package:bagdja_wallet/shared/widgets/action_bottom_sheet.dart';
 import 'package:bagdja_wallet/core/router.dart';
 import 'package:flutter/material.dart';
@@ -6,11 +7,13 @@ import 'package:go_router/go_router.dart';
 class ScaffoldWithBottomNav extends StatelessWidget {
   final String appBarTitle;
   final Widget body;
+  final VoidCallback? onFloatingActionButtonTap;
 
   const ScaffoldWithBottomNav({
     super.key,
     required this.appBarTitle,
     required this.body,
+    this.onFloatingActionButtonTap,
   });
 
   @override
@@ -21,6 +24,7 @@ class ScaffoldWithBottomNav extends StatelessWidget {
         shape: const CircularNotchedRectangle(),
         notchMargin: 6.0,
         height: 60,
+        color: AppColors.primary,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -29,8 +33,8 @@ class ScaffoldWithBottomNav extends StatelessWidget {
               icon: const Icon(Icons.receipt, size: 24),
               onPressed: () => context.goNamed(RouteName.invoiceHistory),
               color: GoRouterState.of(context).name == RouteName.invoiceHistory
-                  ? Colors.blue
-                  : Colors.grey,
+                  ? AppColors.secondary
+                  : AppColors.textPrimary,
               padding: EdgeInsets.zero,
             ),
             const SizedBox(width: 48),
@@ -38,8 +42,8 @@ class ScaffoldWithBottomNav extends StatelessWidget {
               icon: const Icon(Icons.account_balance_wallet, size: 24),
               onPressed: () => context.goNamed(RouteName.escrowHistory),
               color: GoRouterState.of(context).name == RouteName.escrowHistory
-                  ? Colors.blue
-                  : Colors.grey,
+                  ? AppColors.secondary
+                  : AppColors.textPrimary,
               padding: EdgeInsets.zero,
             ),
           ],
@@ -49,9 +53,9 @@ class ScaffoldWithBottomNav extends StatelessWidget {
         width: 56,
         height: 56,
         child: FloatingActionButton(
-          onPressed: () => _showActionBottomSheet(context),
+          onPressed: onFloatingActionButtonTap ?? () => _showActionBottomSheet(context),
           shape: const CircleBorder(),
-          backgroundColor: Colors.blue,
+          backgroundColor: AppColors.secondary,
           elevation: 4,
           child: const Icon(Icons.add, color: Colors.white, size: 28),
         ),

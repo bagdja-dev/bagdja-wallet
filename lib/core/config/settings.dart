@@ -8,10 +8,10 @@ class Settings {
   static Future<void> init() async {
     final packageInfo = await PackageInfo.fromPlatform();
     version = packageInfo.version;
-    
+
     // Check if version contains 'dev' (case insensitive)
     isDev = version.toLowerCase().contains('dev');
-    
+
     if (isDev) {
       baseUrl = 'http://192.168.1.5:5002';
     } else {

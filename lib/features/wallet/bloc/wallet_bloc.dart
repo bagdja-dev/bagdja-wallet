@@ -1,8 +1,11 @@
+
+import 'package:bagdja_wallet/core/config/wallet_config.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bagdja_wallet/features/wallet/bloc/wallet_event.dart';
 import 'package:bagdja_wallet/features/wallet/bloc/wallet_state.dart';
 import 'package:bagdja_wallet/shared/repositories/wallet_repository.dart';
 import 'package:bagdja_wallet/shared/models/organization_model.dart';
+import 'package:bagdja_wallet/shared/models/wallet_model.dart';
 
 class WalletBloc extends Bloc<WalletEvent, WalletState> {
   final WalletRepository walletRepository;
@@ -14,6 +17,105 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     on<SelectWallet>(_onSelectWallet);
     on<SelectWalletOwner>(_onSelectWalletOwner);
     on<LoadMoreTransactions>(_onLoadMoreTransactions);
+    on<ActivateWallet>(_onActivateWallet);
+    on<ShowTopUpModal>(_onShowTopUpModal);
+    on<HideTopUpModal>(_onHideTopUpModal);
+  }
+
+  WalletModel? _getDefaultSelectedWallet(List<WalletModel> wallets) {
+    // Prioritaskan wallet yang aktif dan sesuai urutan supportedWallets
+    for (final supportedWallet in WalletConfig.supportedWallets) {
+      final wallet = wallets.firstWhere(
+        (w) => w.currencyCode == supportedWallet.currencyCode && w.isActive,
+        orElse: () => WalletModel(
+          id: '',
+          userId: '',
+          currencyCode: '',
+          provider: '',
+          balance: 0,
+          heldBalance: 0,
+          isActive: false,
+          updatedAt: DateTime.now(),
+        ),
+      );
+      if (wallet.id.isNotEmpty) {
+        return wallet;
+      }
+    }
+    // Jika tidak ada wallet yang aktif, cari wallet pertama sesuai urutan supportedWallets
+    for (final supportedWallet in WalletConfig.supportedWallets) {
+      final wallet = wallets.firstWhere(
+        (w) => w.currencyCode == supportedWallet.currencyCode,
+        orElse: () => WalletModel(
+          id: '',
+          userId: '',
+          currencyCode: '',
+          provider: '',
+          balance: 0,
+          heldBalance: 0,
+          isActive: false,
+          updatedAt: DateTime.now(),
+        ),
+      );
+      if (wallet.id.isNotEmpty) {
+        return wallet;
+      }
+    }
+    // Jika tidak ada sama sekali
+    return wallets.isNotEmpty ? wallets.first : null;
+  }
+
+  Future<void> _onActivateWallet(
+    ActivateWallet event,
+    Emitter<WalletState> emit,
+  ) async {
+    if (state is! WalletLoaded) return;
+
+    final currentState = state as WalletLoaded;
+    emit(currentState.copyWith(isActivatingWallet: true));
+
+    try {
+      final selectedOwner = currentState.selectedWalletOwner;
+      if (selectedOwner?.isPersonal == true) {
+        await walletRepository.activatePersonalWallet(event.currencyCode);
+      } else if (selectedOwner?.orgId != null) {
+        await walletRepository.activateOrganizationWallet(
+          selectedOwner!.orgId!,
+          event.currencyCode,
+        );
+      }
+
+      // Refresh wallets
+      add(const FetchWalletBalance());
+    } catch (e) {
+      if (state is WalletLoaded) {
+        emit((state as WalletLoaded).copyWith(isActivatingWallet: false));
+      }
+    }
+  }
+
+  void _onShowTopUpModal(
+    ShowTopUpModal event,
+    Emitter<WalletState> emit,
+  ) {
+    if (state is! WalletLoaded) return;
+
+    emit((state as WalletLoaded).copyWith(
+      shouldShowTopUpModal: true,
+      topUpCurrency: event.currencyCode,
+    ));
+  }
+
+  void _onHideTopUpModal(
+    HideTopUpModal event,
+    Emitter<WalletState> emit,
+  ) {
+    if (state is! WalletLoaded) return;
+
+    emit((state as WalletLoaded).copyWith(
+      shouldShowTopUpModal: false,
+      topUpCurrency: null,
+    ));
   }
 
   Future<void> _onFetchWalletBalance(
@@ -23,28 +125,26 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     emit(const WalletLoading());
     try {
       final wallets = await walletRepository.getMyWallet();
-      final selected = wallets.isNotEmpty
-          ? wallets.firstWhere((w) => w.isActive, orElse: () => wallets.first)
-          : null;
-      
+      final selected = _getDefaultSelectedWallet(wallets);
+
       // Create default personal owner
       final personalOwner = WalletOwner(
         id: 'personal',
         name: 'Personal',
         isPersonal: true,
       );
-      
+
       emit(WalletLoaded(
         wallets,
         selectedWallet: selected,
         walletOwners: [personalOwner],
         selectedWalletOwner: personalOwner,
       ));
-      
+
       // Fetch organizations and user profile
       add(const FetchOrganizations());
       add(const FetchUserProfile());
-      
+
       if (selected != null) {
         add(const LoadMoreTransactions());
       }
@@ -165,9 +265,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
                   (throw Exception('Organization ID tidak ditemukan')),
             );
 
-      final selectedWallet = wallets.isNotEmpty
-          ? wallets.firstWhere((w) => w.isActive, orElse: () => wallets.first)
-          : null;
+      final selectedWallet = _getDefaultSelectedWallet(wallets);
 
       if (state is WalletLoaded) {
         final latest = state as WalletLoaded;
@@ -242,3 +340,4 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     }
   }
 }
+

@@ -1,3 +1,4 @@
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -6,10 +7,61 @@ import 'package:go_router/go_router.dart';
 import 'package:bagdja_wallet/core/router.dart';
 import 'package:bagdja_wallet/core/theme/app_colors.dart';
 import 'package:bagdja_wallet/features/auth/bloc/auth_bloc.dart';
+import 'package:bagdja_wallet/features/wallet/bloc/wallet_bloc.dart';
+import 'package:bagdja_wallet/features/wallet/bloc/wallet_state.dart';
+import 'package:bagdja_wallet/features/wallet/bloc/wallet_event.dart';
+import 'package:bagdja_wallet/shared/widgets/top_up_bottom_sheet.dart';
 import 'package:bagdja_wallet/injection.dart' as di;
 import 'package:bagdja_wallet/core/config/settings.dart';
 import 'package:bagdja_wallet/core/network/api_client.dart';
 import 'package:bagdja_wallet/localization/main.dart';
+
+class GlobalTopUpListener extends StatelessWidget {
+  final Widget child;
+
+  const GlobalTopUpListener({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<WalletBloc, WalletState>(
+      listener: (context, state) {
+        if (state is WalletLoaded && state.shouldShowTopUpModal) {
+          final navigatorContext = AppRouter.rootNavigatorKey.currentContext;
+          if (navigatorContext == null) return;
+
+          showModalBottomSheet(
+            context: navigatorContext,
+            isScrollControlled: true,
+            useSafeArea: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) {
+              return Padding(
+                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                child: BlocProvider.value(
+                  value: context.read<WalletBloc>(),
+                  child: TopUpBottomSheet(
+                    currencyCode: state.topUpCurrency ?? 'IDR',
+                    isPersonal: state.selectedWalletOwner?.isPersonal ?? true,
+                    organizationId: state.selectedWalletOwner?.orgId,
+                    onClose: () {
+                      context.read<WalletBloc>().add(const HideTopUpModal());
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+              );
+            },
+          ).whenComplete(() {
+            if (navigatorContext.mounted) {
+              navigatorContext.read<WalletBloc>().add(const HideTopUpModal());
+            }
+          });
+        }
+      },
+      child: child,
+    );
+  }
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,6 +119,9 @@ class _MyAppState extends State<MyApp> {
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: widget.authBloc),
+        BlocProvider(
+          create: (context) => di.sl<WalletBloc>()..add(const FetchWalletBalance()),
+        ),
       ],
       child: BlocListener<AuthBloc, AuthState>(
         listenWhen: (previous, current) =>
@@ -114,8 +169,12 @@ class _MyAppState extends State<MyApp> {
             useMaterial3: true,
           ),
           routerConfig: widget.router,
+          builder: (context, child) => GlobalTopUpListener(
+            child: child ?? const SizedBox.shrink(),
+          ),
         ),
       ),
     );
   }
 }
+

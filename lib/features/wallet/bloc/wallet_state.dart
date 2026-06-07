@@ -31,6 +31,9 @@ class WalletLoaded extends WalletState {
   final List<WalletOwner> walletOwners;
   final WalletOwner? selectedWalletOwner;
   final UserProfileModel? userProfile;
+  final bool shouldShowTopUpModal;
+  final String? topUpCurrency;
+  final bool isActivatingWallet;
 
   const WalletLoaded(
     this.wallets, {
@@ -44,6 +47,9 @@ class WalletLoaded extends WalletState {
     this.walletOwners = const [],
     this.selectedWalletOwner,
     this.userProfile,
+    this.shouldShowTopUpModal = false,
+    this.topUpCurrency,
+    this.isActivatingWallet = false,
   });
 
   WalletLoaded copyWith({
@@ -58,6 +64,9 @@ class WalletLoaded extends WalletState {
     List<WalletOwner>? walletOwners,
     WalletOwner? selectedWalletOwner,
     UserProfileModel? userProfile,
+    bool? shouldShowTopUpModal,
+    String? topUpCurrency,
+    bool? isActivatingWallet,
   }) {
     return WalletLoaded(
       wallets ?? this.wallets,
@@ -71,6 +80,9 @@ class WalletLoaded extends WalletState {
       walletOwners: walletOwners ?? this.walletOwners,
       selectedWalletOwner: selectedWalletOwner ?? this.selectedWalletOwner,
       userProfile: userProfile ?? this.userProfile,
+      shouldShowTopUpModal: shouldShowTopUpModal ?? this.shouldShowTopUpModal,
+      topUpCurrency: topUpCurrency ?? this.topUpCurrency,
+      isActivatingWallet: isActivatingWallet ?? this.isActivatingWallet,
     );
   }
 
@@ -87,6 +99,9 @@ class WalletLoaded extends WalletState {
         walletOwners,
         selectedWalletOwner,
         userProfile,
+        shouldShowTopUpModal,
+        topUpCurrency,
+        isActivatingWallet,
       ];
 }
 

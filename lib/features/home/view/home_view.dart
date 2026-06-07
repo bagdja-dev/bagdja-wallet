@@ -1,6 +1,7 @@
 import 'package:bagdja_wallet/core/utils/widget_extensions.dart';
 import 'package:bagdja_wallet/features/home/view/widgets/recent_transactions_section.dart';
 import 'package:bagdja_wallet/features/home/view/widgets/wallets_section.dart';
+import 'package:bagdja_wallet/shared/widgets/action_bottom_sheet.dart';
 import 'package:bagdja_wallet/features/wallet/bloc/wallet_bloc.dart';
 import 'package:bagdja_wallet/features/wallet/bloc/wallet_event.dart';
 import 'package:bagdja_wallet/features/wallet/bloc/wallet_state.dart';
@@ -19,11 +20,35 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScaffoldWithBottomNav(
-      appBarTitle: context.tr('home.wallet'),
-      body: const _HomeTab(),
+    return BlocBuilder<WalletBloc, WalletState>(
+      builder: (context, state) {
+        return ScaffoldWithBottomNav(
+          appBarTitle: context.tr('home.wallet'),
+          onFloatingActionButtonTap: state is WalletLoaded
+              ? () => _showActionBottomSheet(context, state)
+              : null,
+          body: const _HomeTab(),
+        );
+      },
     );
   }
+
+  void _showActionBottomSheet(BuildContext outerContext, WalletLoaded state) {
+    final walletBloc = outerContext.read<WalletBloc>();
+    showModalBottomSheet(
+      context: outerContext,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (innerContext) => ActionBottomSheet(
+        onTopUpTap: () {
+          Navigator.pop(innerContext);
+          final currencyCode = state.selectedWallet?.currencyCode ?? 'IDR';
+          walletBloc.add(ShowTopUpModal(currencyCode));
+        },
+      ),
+    );
+  }
+
 }
 
 class _HomeTab extends StatelessWidget {
@@ -54,6 +79,7 @@ class _HomeTab extends StatelessWidget {
               walletOwners: state.walletOwners,
               selectedWalletOwner: state.selectedWalletOwner,
               userProfile: state.userProfile,
+              isActivatingWallet: state.isActivatingWallet,
             ),
             _ => const SizedBox.shrink(),
           };
@@ -115,6 +141,7 @@ class _LoadedState extends StatefulWidget {
   final List<WalletOwner> walletOwners;
   final WalletOwner? selectedWalletOwner;
   final UserProfileModel? userProfile;
+  final bool isActivatingWallet;
 
   const _LoadedState({
     required this.wallets,
@@ -127,6 +154,7 @@ class _LoadedState extends StatefulWidget {
     required this.walletOwners,
     required this.selectedWalletOwner,
     this.userProfile,
+    this.isActivatingWallet = false,
   });
 
   @override
@@ -172,6 +200,7 @@ class _LoadedStateState extends State<_LoadedState> {
               walletOwners: widget.walletOwners,
               selectedWalletOwner: widget.selectedWalletOwner,
               userProfile: widget.userProfile,
+              isActivatingWallet: widget.isActivatingWallet,
             ),
             Expanded(
               child: SizedBox(

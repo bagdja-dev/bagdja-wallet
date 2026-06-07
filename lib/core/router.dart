@@ -1,9 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:bagdja_wallet/features/wallet/bloc/wallet_bloc.dart';
-import 'package:bagdja_wallet/features/wallet/bloc/wallet_event.dart';
-import 'package:bagdja_wallet/injection.dart';
 import 'package:bagdja_wallet/features/auth/bloc/auth_bloc.dart';
 import 'package:bagdja_wallet/features/auth/view/login_view.dart';
 import 'package:bagdja_wallet/features/home/view/home_view.dart';
@@ -57,10 +53,7 @@ class AppRouter {
         GoRoute(
           path: '/home',
           name: RouteName.home,
-          builder: (context, state) => BlocProvider(
-            create: (context) => sl<WalletBloc>()..add(const FetchWalletBalance()),
-            child: const HomeView(),
-          ),
+          builder: (context, state) => const HomeView(),
         ),
         GoRoute(
           path: '/invoice-history',
