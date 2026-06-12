@@ -64,3 +64,7 @@ class ShowTopUpModal extends WalletEvent {
 class HideTopUpModal extends WalletEvent {
   const HideTopUpModal();
 }
+
+class ResetWallet extends WalletEvent {
+  const ResetWallet();
+}

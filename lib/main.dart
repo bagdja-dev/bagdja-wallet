@@ -101,15 +101,25 @@ class _MyAppState extends State<MyApp> {
       widget.authBloc.add(const CheckAuthStatus());
     });
 
+    // Listen for auth state changes on initial check
+    _authStateSubscription = widget.authBloc.stream.listen((state) {
+      if (state is AuthAuthenticated) {
+        di.sl<WalletBloc>().add(const FetchWalletBalance());
+      }
+    });
+
     // Listen for unauthorized events from API client
     _unauthorizedSubscription = widget.apiClient.onUnauthorized.listen((_) {
       widget.authBloc.add(const LogoutRequested());
     });
   }
 
+  StreamSubscription<AuthState>? _authStateSubscription;
+
   @override
   void dispose() {
     _unauthorizedSubscription?.cancel();
+    _authStateSubscription?.cancel();
     widget.apiClient.dispose();
     super.dispose();
   }
@@ -120,7 +130,7 @@ class _MyAppState extends State<MyApp> {
       providers: [
         BlocProvider.value(value: widget.authBloc),
         BlocProvider(
-          create: (context) => di.sl<WalletBloc>()..add(const FetchWalletBalance()),
+          create: (context) => di.sl<WalletBloc>(),
         ),
       ],
       child: BlocListener<AuthBloc, AuthState>(
@@ -129,8 +139,10 @@ class _MyAppState extends State<MyApp> {
             (previous is AuthAuthenticated && current is AuthInitial),
         listener: (context, state) {
           if (state is AuthAuthenticated) {
+            context.read<WalletBloc>().add(const FetchWalletBalance());
             widget.router.goNamed(RouteName.home);
           } else if (state is AuthInitial) {
+            context.read<WalletBloc>().add(const ResetWallet());
             widget.router.goNamed(RouteName.login);
           }
         },

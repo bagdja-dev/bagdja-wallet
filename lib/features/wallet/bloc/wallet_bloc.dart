@@ -20,6 +20,14 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     on<ActivateWallet>(_onActivateWallet);
     on<ShowTopUpModal>(_onShowTopUpModal);
     on<HideTopUpModal>(_onHideTopUpModal);
+    on<ResetWallet>(_onResetWallet);
+  }
+
+  void _onResetWallet(
+    ResetWallet event,
+    Emitter<WalletState> emit,
+  ) {
+    emit(const WalletInitial());
   }
 
   WalletModel? _getDefaultSelectedWallet(List<WalletModel> wallets) {
