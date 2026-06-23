@@ -4,6 +4,9 @@ import 'package:bagdja_wallet/features/auth/repositories/auth_repository.dart';
 import 'package:bagdja_wallet/features/auth/bloc/auth_bloc.dart';
 import 'package:bagdja_wallet/shared/repositories/wallet_repository.dart';
 import 'package:bagdja_wallet/features/wallet/bloc/wallet_bloc.dart';
+import 'package:bagdja_wallet/features/escrow/repositories/escrow_repository.dart';
+import 'package:bagdja_wallet/features/escrow/bloc/escrow_bloc.dart';
+import 'package:bagdja_wallet/features/escrow/bloc/escrow_history_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -16,7 +19,10 @@ Future<void> init() async {
   await authRepository.initDeepLinks();
 
   sl.registerLazySingleton(() => WalletRepository(apiClient: sl()));
+  sl.registerLazySingleton(() => EscrowRepository(apiClient: sl()));
 
-  sl.registerFactory(() => AuthBloc(authRepository: sl()));
-  sl.registerFactory(() => WalletBloc(walletRepository: sl()));
+  sl.registerLazySingleton(() => AuthBloc(authRepository: sl()));
+  sl.registerLazySingleton(() => WalletBloc(walletRepository: sl()));
+  sl.registerFactory(() => EscrowBloc(escrowRepository: sl()));
+  sl.registerFactory(() => EscrowHistoryBloc(escrowRepository: sl()));
 }

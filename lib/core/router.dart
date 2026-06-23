@@ -5,6 +5,7 @@ import 'package:bagdja_wallet/features/auth/view/login_view.dart';
 import 'package:bagdja_wallet/features/home/view/home_view.dart';
 import 'package:bagdja_wallet/features/invoice/view/invoice_history_view.dart';
 import 'package:bagdja_wallet/features/escrow/view/escrow_history_view.dart';
+import 'package:bagdja_wallet/features/escrow/view/create_escrow_invoice_view.dart';
 import 'package:bagdja_wallet/features/profile/view/profile_view.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +15,7 @@ class RouteName {
   static const String home = 'home';
   static const String invoiceHistory = 'invoice-history';
   static const String escrowHistory = 'escrow-history';
+  static const String createEscrow = 'create-escrow';
   static const String profile = 'profile';
 }
 
@@ -64,6 +66,11 @@ class AppRouter {
           path: '/escrow-history',
           name: RouteName.escrowHistory,
           builder: (context, state) => const EscrowHistoryView(),
+        ),
+        GoRoute(
+          path: '/create-escrow',
+          name: RouteName.createEscrow,
+          builder: (context, state) => const CreateEscrowInvoiceView(),
         ),
         GoRoute(
           path: '/profile',

@@ -11,8 +11,12 @@ import 'package:bagdja_wallet/shared/models/organization_model.dart';
 import 'package:bagdja_wallet/shared/models/user_profile_model.dart';
 import 'package:bagdja_wallet/shared/widgets/scaffold_with_bottom_nav.dart';
 import 'package:bagdja_wallet/localization/main.dart';
+import 'package:bagdja_wallet/features/escrow/bloc/escrow_bloc.dart';
+import 'package:bagdja_wallet/injection.dart';
+import 'package:bagdja_wallet/core/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class HomeView extends StatelessWidget {
@@ -20,16 +24,19 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<WalletBloc, WalletState>(
-      builder: (context, state) {
-        return ScaffoldWithBottomNav(
-          appBarTitle: context.tr('home.wallet'),
-          onFloatingActionButtonTap: state is WalletLoaded
-              ? () => _showActionBottomSheet(context, state)
-              : null,
-          body: const _HomeTab(),
-        );
-      },
+    return BlocProvider(
+      create: (context) => sl<EscrowBloc>(),
+      child: BlocBuilder<WalletBloc, WalletState>(
+        builder: (context, state) {
+          return ScaffoldWithBottomNav(
+            appBarTitle: context.tr('home.wallet'),
+            onFloatingActionButtonTap: state is WalletLoaded
+                ? () => _showActionBottomSheet(context, state)
+                : null,
+            body: const _HomeTab(),
+          );
+        },
+      ),
     );
   }
 
@@ -44,6 +51,10 @@ class HomeView extends StatelessWidget {
           Navigator.pop(innerContext);
           final currencyCode = state.selectedWallet?.currencyCode ?? 'IDR';
           walletBloc.add(ShowTopUpModal(currencyCode));
+        },
+        onCreateEscrowTap: () {
+          Navigator.pop(innerContext);
+          outerContext.pushNamed(RouteName.createEscrow);
         },
       ),
     );
