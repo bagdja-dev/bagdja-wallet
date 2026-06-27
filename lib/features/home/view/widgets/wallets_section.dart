@@ -259,6 +259,19 @@ class WalletsSection extends StatelessWidget {
                   SizedBox(
                     child: Row(
                       children: [
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () {
+                            context.read<WalletBloc>().add(const FetchWalletBalance());
+                          },
+                          icon: const Icon(
+                            Icons.refresh,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          tooltip: context.tr('home.refresh'),
+                        ),
                         GestureDetector(
                           onTap: () {
                             context.pushNamed(RouteName.profile);
@@ -268,7 +281,7 @@ class WalletsSection extends StatelessWidget {
                             color: AppColors.textPrimary,
                           ),
                         ),
-                      ].withGap(5),
+                      ].withGap(10),
                     ),
                   ),
                 ],

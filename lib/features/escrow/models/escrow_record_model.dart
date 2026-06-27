@@ -36,10 +36,16 @@ class EscrowRecordModel {
   });
 
   factory EscrowRecordModel.fromJson(Map<String, dynamic> json) {
+    // Helper to clean strings
+    String? cleanString(dynamic value) {
+      if (value == null) return null;
+      return value.toString().trim().replaceAll(RegExp(r'^`|`$'), '');
+    }
+
     return EscrowRecordModel(
       id: json['id'],
-      paymentRequestId: json['payment_request_id'],
-      checkoutUrl: json['checkout_url'],
+      paymentRequestId: cleanString(json['payment_request_id']),
+      checkoutUrl: cleanString(json['checkout_url']),
       buyerType: json['buyer_type'],
       buyerIdentifier: json['buyer_identifier'],
       sellerType: json['seller_type'],

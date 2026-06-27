@@ -198,12 +198,9 @@ class AuthRepository {
     if (savedState == null || codeVerifier == null) {
       if (await isLoggedIn()) {
         final token = await getAccessToken();
-        return UserModel(
-          userId: 'SSO_USER',
-          username: 'bagdja_user',
-          name: 'Bagdja User',
-          token: token ?? '',
-        );
+        if (token != null) {
+          return UserModel.fromToken(token);
+        }
       }
       throw Exception('Sesi login tidak ditemukan. Silakan login ulang.');
     }
@@ -246,12 +243,13 @@ class AuthRepository {
 
     await secureStorage.delete(key: _forceReauthKey);
 
-    return UserModel(
-      userId: 'SSO_USER',
-      username: 'bagdja_user',
-      name: 'Bagdja User',
-      token: accessToken,
-    );
+    // Buat UserModel dari token JWT
+    final user = UserModel.fromToken(accessToken);
+    
+    // Simpan data user ke secure storage
+    await secureStorage.write(key: 'user_data', value: user.toJson().toString());
+
+    return user;
   }
 
   Future<bool> isLoggedIn() async {

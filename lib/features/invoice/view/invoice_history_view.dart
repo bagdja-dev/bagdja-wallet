@@ -1,39 +1,71 @@
 import 'package:bagdja_wallet/core/router.dart';
 import 'package:bagdja_wallet/shared/widgets/scaffold_with_bottom_nav.dart';
+import 'package:bagdja_wallet/shared/widgets/action_bottom_sheet.dart';
+import 'package:bagdja_wallet/features/wallet/bloc/wallet_bloc.dart';
+import 'package:bagdja_wallet/features/wallet/bloc/wallet_event.dart';
+import 'package:bagdja_wallet/features/wallet/bloc/wallet_state.dart';
 import 'package:bagdja_wallet/localization/main.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class InvoiceHistoryView extends StatelessWidget {
   const InvoiceHistoryView({super.key});
 
+  void _showActionBottomSheet(BuildContext outerContext, WalletLoaded state) {
+    final walletBloc = outerContext.read<WalletBloc>();
+    showModalBottomSheet(
+      context: outerContext,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (innerContext) => ActionBottomSheet(
+        onTopUpTap: () {
+          Navigator.pop(innerContext);
+          final currencyCode = state.selectedWallet?.currencyCode ?? 'IDR';
+          walletBloc.add(ShowTopUpModal(currencyCode));
+        },
+        onCreateEscrowTap: () {
+          Navigator.pop(innerContext);
+          outerContext.pushNamed(RouteName.createEscrow);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ScaffoldWithBottomNav(
-      appBarTitle: context.tr('home.invoiceHistory'),
-      body: Stack(
-        children: [
-          SafeArea(
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, size: 24),
-                    onPressed: () => context.goNamed(RouteName.home),
+    return BlocBuilder<WalletBloc, WalletState>(
+      builder: (context, state) {
+        return ScaffoldWithBottomNav(
+          appBarTitle: context.tr('home.invoiceHistory'),
+          onFloatingActionButtonTap: state is WalletLoaded
+              ? () => _showActionBottomSheet(context, state)
+              : null,
+          body: Stack(
+            children: [
+              SafeArea(
+                child: Align(
+                  alignment: Alignment.topLeft,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, size: 24),
+                        onPressed: () => context.goNamed(RouteName.home),
+                      ),
+                      Text(context.tr('home.invoiceHistory')),
+                    ],
                   ),
-                  Text(context.tr('home.invoiceHistory')),
-                ],
+                ),
               ),
-            ),
+              SizedBox(
+                width: double.infinity,
+                height: double.infinity,
+                child: _buildInvoiceHistory(),
+              ),
+            ],
           ),
-          SizedBox(
-            width: double.infinity,
-            height: double.infinity,
-            child: _buildInvoiceHistory(),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

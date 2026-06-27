@@ -25,14 +25,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final isLoggedIn = await authRepository.isLoggedIn();
     if (isLoggedIn) {
       final token = await authRepository.getAccessToken();
-      emit(AuthAuthenticated(
-        user: UserModel(
-          userId: 'SSO_USER',
-          username: 'bagdja_user',
-          name: 'Bagdja User',
-          token: token ?? '',
-        ),
-      ));
+      if (token != null) {
+        emit(AuthAuthenticated(user: UserModel.fromToken(token)));
+      } else {
+        emit(AuthInitial());
+      }
     } else {
       emit(AuthInitial());
     }
