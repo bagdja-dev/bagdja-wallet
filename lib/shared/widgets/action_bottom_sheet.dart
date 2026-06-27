@@ -2,9 +2,11 @@ import 'package:bagdja_wallet/core/theme/app_colors.dart';
 import 'package:bagdja_wallet/features/wallet/bloc/wallet_bloc.dart';
 import 'package:bagdja_wallet/features/wallet/bloc/wallet_event.dart';
 import 'package:bagdja_wallet/features/wallet/bloc/wallet_state.dart';
+import 'package:bagdja_wallet/core/router.dart';
 import 'package:bagdja_wallet/localization/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class ActionBottomSheet extends StatelessWidget {
   final VoidCallback? onTopUpTap;
@@ -67,7 +69,10 @@ class ActionBottomSheet extends StatelessWidget {
               icon: Icons.shield,
               title: context.tr('home.createEscrow'),
               description: context.tr('home.createEscrowDescription'),
-              onTap: onCreateEscrowTap ?? () => Navigator.pop(context),
+              onTap: onCreateEscrowTap ?? () {
+                Navigator.pop(context);
+                context.pushNamed(RouteName.createEscrow);
+              },
             ),
           ],
         ),

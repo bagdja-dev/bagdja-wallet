@@ -6,7 +6,9 @@ import 'package:bagdja_wallet/features/home/view/home_view.dart';
 import 'package:bagdja_wallet/features/invoice/view/invoice_history_view.dart';
 import 'package:bagdja_wallet/features/escrow/view/escrow_history_view.dart';
 import 'package:bagdja_wallet/features/escrow/view/create_escrow_invoice_view.dart';
+import 'package:bagdja_wallet/features/escrow/view/escrow_detail_view.dart';
 import 'package:bagdja_wallet/features/profile/view/profile_view.dart';
+import 'package:bagdja_wallet/features/escrow/models/escrow_record_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,12 +17,17 @@ class RouteName {
   static const String home = 'home';
   static const String invoiceHistory = 'invoice-history';
   static const String escrowHistory = 'escrow-history';
+  static const String escrowDetail = 'escrow-detail';
   static const String createEscrow = 'create-escrow';
   static const String profile = 'profile';
 }
 
 bool _isOAuthCallbackUri(Uri uri) {
   return uri.scheme == 'com.bagdja.wallet';
+}
+
+bool _isEscrowPaymentCallbackUri(Uri uri) {
+  return uri.scheme == 'bagdja' && uri.host == 'escrow';
 }
 
 class _AuthRefreshNotifier extends ChangeNotifier {
@@ -68,6 +75,14 @@ class AppRouter {
           builder: (context, state) => const EscrowHistoryView(),
         ),
         GoRoute(
+          path: '/escrow-detail',
+          name: RouteName.escrowDetail,
+          builder: (context, state) {
+            final escrow = state.extra as EscrowRecordModel;
+            return EscrowDetailView(escrow: escrow);
+          },
+        ),
+        GoRoute(
           path: '/create-escrow',
           name: RouteName.createEscrow,
           builder: (context, state) => const CreateEscrowInvoiceView(),
@@ -81,6 +96,12 @@ class AppRouter {
       redirect: (context, state) {
         if (_isOAuthCallbackUri(state.uri)) {
           return '/login';
+        }
+
+        // Handle escrow payment deep link
+        if (_isEscrowPaymentCallbackUri(state.uri)) {
+          // Redirect to escrow history page
+          return '/escrow-history';
         }
 
         final isAuthenticated = authBloc.state is AuthAuthenticated;

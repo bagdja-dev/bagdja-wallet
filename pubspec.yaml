@@ -49,6 +49,7 @@ dependencies:
   package_info_plus: ^10.1.0
   intl: ^0.20.2
   svg_flutter: ^0.0.1
+  jwt_decode: ^0.3.1
 
 dev_dependencies:
   flutter_test:
