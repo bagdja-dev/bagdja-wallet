@@ -117,4 +117,32 @@ class EscrowRepository {
     }
   }
 
+  Future<EscrowRecordModel> getEscrowById(String id) async {
+    try {
+      final resp = await apiClient.dio.get('/escrow/$id');
+      return EscrowRecordModel.fromJson(resp.data);
+    } on DioException catch (e) {
+      throw Exception(e.response?.data ?? 'Failed to fetch escrow detail');
+    }
+  }
+
+  Future<EscrowRecordModel> initializePayment(String id) async {
+    try {
+      final resp = await apiClient.dio.post('/escrow/$id/initialize-payment');
+      return EscrowRecordModel.fromJson(resp.data);
+    } on DioException catch (e) {
+      throw Exception(e.response?.data ?? 'Failed to initialize payment');
+    }
+  }
+
+  Future<EscrowRecordModel> releaseEscrow(String id) async {
+    try {
+      final resp = await apiClient.dio.post('/escrow/$id/release');
+      final data = resp.data as Map<String, dynamic>;
+      return EscrowRecordModel.fromJson(data['escrow'] as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw Exception(e.response?.data ?? 'Failed to release escrow');
+    }
+  }
+
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:bagdja_wallet/core/utils/widget_extensions.dart';
+import 'package:bagdja_wallet/features/auth/bloc/auth_bloc.dart';
 import 'package:bagdja_wallet/features/escrow/bloc/escrow_bloc.dart';
 import 'package:bagdja_wallet/features/escrow/bloc/escrow_event.dart';
 import 'package:bagdja_wallet/features/escrow/bloc/escrow_state.dart';
@@ -106,8 +107,9 @@ class _CreateEscrowInvoiceContentState
 
     // ✨ Get state from BLoC
     final escrowState = context.read<EscrowBloc>().state;
+    final authState = context.read<AuthBloc>().state;
     
-    if (escrowState is! EscrowFormState) return;
+    if (escrowState is! EscrowFormState || authState is! AuthAuthenticated) return;
     
     final isValidIdentifier = escrowState.validationState is ValidationSuccess;
     if (!isValidIdentifier) return;
@@ -118,18 +120,21 @@ class _CreateEscrowInvoiceContentState
     );
     final amount = double.tryParse(amountText) ?? 0;
 
+    // Gunakan username atau email sebagai identifier untuk current user
+    final myIdentifier = authState.user.username ?? authState.user.email ?? authState.user.userId;
+
     final dto = CreateEscrowInvoiceDto(
       buyerType: escrowState.userPosition == 'buyer'
           ? 'personal'
           : escrowState.partnerType,
       buyerIdentifier: escrowState.userPosition == 'buyer'
-          ? 'my-id'
+          ? myIdentifier
           : _partnerIdentifierController.text,
       sellerType: escrowState.userPosition == 'seller'
           ? 'personal'
           : escrowState.partnerType,
       sellerIdentifier: escrowState.userPosition == 'seller'
-          ? 'my-id'
+          ? myIdentifier
           : _partnerIdentifierController.text,
       buyerWalletId:
           escrowState.userPosition == 'buyer' ? escrowState.selectedWallet?.id : escrowState.partnerWallet?.id,
